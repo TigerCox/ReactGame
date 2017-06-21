@@ -1,20 +1,45 @@
+var WebSocketServer = require('websocket').server;
 var http = require('http');
-
 var url = require('url');
 
+var server = http.createServer(function(request, response) {
+  // process HTTP request. Since we're writing just WebSockets
+  // server we don't have to implement anything.
+  var page = url.parse(req.url).pathname;
 
-var server = http.createServer(function(req, res) {
+  console.log(page);
+  res.writeHead(200, {"Content-Type": "text/plain"});
+  res.write('Well Hello');
+  res.end();
+});
+server.listen(1337, function() { });
 
-var page = url.parse(req.url).pathname;
-
-console.log(page);
-
-res.writeHead(200, {"Content-Type": "text/plain"});
-
-res.write('Well Hello');
-
-res.end();
-
+// create the server
+wsServer = new WebSocketServer({
+  httpServer: server
 });
 
-server.listen(8080);
+// WebSocket server
+wsServer.on('request', function(request) {
+  var connection = request.accept(null, request.origin);
+  
+  console.log("Connection open");
+  connection.sendUTF(JSON.stringify({ type: 'open', data: "open" }));
+
+  // This is the most important callback for us, we'll handle
+  // all messages from users here.
+  connection.on('message', function(message) {
+	console.log("Message recieved");
+    if (message.type === 'utf8') {
+	  // process WebSocket message
+	  var data = JSON.parse(message.utf8Data);
+      connection.sendUTF(JSON.stringify({ type: 'reply', data: data }));
+	  console.log("Message sent");
+    }
+  });
+
+  connection.on('close', function(connection) {
+    // close user connection
+	console.log("Connection closed");
+  });
+});

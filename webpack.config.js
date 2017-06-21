@@ -23,7 +23,7 @@ var config = {
   devServer: {
     port: 8888,
 	contentBase: path.join(__dirname, "src/client"),
-    compress: true,
+    compress: false,
     host: "localhost"
   }
 };
