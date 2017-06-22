@@ -6,7 +6,7 @@ var APP_DIR = path.resolve(__dirname, 'src/client');
 
 var config = {
   entry:  {
-	app: APP_DIR + '/app/index.jsx',
+	app: APP_DIR + '/app/index.js',
 	'index.html': APP_DIR + '/index.html'
   },
   output: {
@@ -15,7 +15,7 @@ var config = {
   },
   module : {
     loaders : [
-      { test : /\.jsx$/, include : APP_DIR, loader : 'babel-loader' },
+      { test : /\.js$/, include : APP_DIR, loader : 'babel-loader' },
 	  { test : /\.json$/, include : APP_DIR, loader : 'json-loader' },
 	  { test : /\.html$/, include : APP_DIR, loader : 'file-loader?name=[name].[ext]' }
     ]

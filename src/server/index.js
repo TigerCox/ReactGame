@@ -1,6 +1,8 @@
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var url = require('url');
+var Boards = require('./boards/boards');
+var boards = Boards();
 
 var server = http.createServer(function(request, response) {
   // process HTTP request. Since we're writing just WebSockets
@@ -33,8 +35,19 @@ wsServer.on('request', function(request) {
     if (message.type === 'utf8') {
 	  // process WebSocket message
 	  var data = JSON.parse(message.utf8Data);
-      connection.sendUTF(JSON.stringify({ type: 'reply', data: data }));
-	  console.log("Message sent");
+	  console.log("Message" + message.utf8Data);
+	  switch (data.type) {
+		  case "JOIN_GAME":
+		    boards.addBoard(function(boardIdentifier) {
+				boards.addPlayer(boardIdentifier, function(playerIdentifier) {
+					boards.getBoard(boardIdentifier, playerIdentifier, function(board) {
+						console.log("Message sent");
+						connection.sendUTF(JSON.stringify({ type: 'UPDATE_BOARD', data: { boardIdentifier: boardIdentifier, playerIdentifier: playerIdentifier, board: board } }));
+					});
+				});
+			});
+			break;
+	  }
     }
   });
 

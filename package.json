@@ -23,6 +23,7 @@
     "babel-loader": "^7.1.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-react": "^6.24.1",
+    "memory-cache": "^0.2.0",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-redux": "^5.0.5",
@@ -30,6 +31,8 @@
     "react-router-redux": "^4.0.8",
     "redux": "^3.7.0",
     "redux-api-middleware": "^1.0.3",
+    "redux-thunk": "^2.2.0",
+    "rwlock": "^5.0.0",
     "webpack": "^3.0.0",
     "websocket": "^1.0.24"
   },
