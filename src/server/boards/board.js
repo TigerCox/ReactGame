@@ -22,7 +22,7 @@ class Board {
 	}
 
 	addPlayer(player) {
-		var state = new PlayerState(player, x, y, r);
+		var state = new PlayerState(player, 0, 0, 0);
 		this.players[player.getIdentifier()] = state;
 	}
 

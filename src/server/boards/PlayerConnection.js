@@ -1,5 +1,6 @@
 import guid from '../guid';
 import Connection from '../sockets/Connection'
+import {joinGame} from '../actions/BoardActions'
 
 class PlayerConnection extends Connection {
 	constructor(server, request) {
@@ -35,13 +36,15 @@ class PlayerConnection extends Connection {
       case "CREATE_GAME":
           this.server.addBoard(function(boardIdentifier) {
             this.server.addPlayerToBoard(boardIdentifier, this.getIdentifier(), function(playerIdentifier) {
-              this.send({ type: 'UPDATE_BOARD', data: { boardIdentifier: boardIdentifier, board: board } });
+							this.server.getBoard(boardIdentifier, this.getIdentifier(), function(board) {
+								this.send(joinGame(boardIdentifier, board));
+							}.bind(this));
           }.bind(this));
         }.bind(this));
         break;
       case "JOIN_GAME":
         this.server.addPlayerToBoard(data.gameIdentifier, this.getIdentifier(), function() {
-            this.send({ type: 'UPDATE_BOARD', data: { boardIdentifier: "data.gameIdentifier", playerIdentifier: "", board: "board" } });
+            this.send(joinGame(boardIdentifier, board));
         }.bind(this));
         break;
     }
