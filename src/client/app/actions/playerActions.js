@@ -1,7 +1,15 @@
-import {JOIN_GAME, LEAVE_GAME, PLAYER_ACTION} from './actionTypes';
+import {CREATE_GAME, JOIN_GAME, LEAVE_GAME, PLAYER_ACTION} from './actionTypes';
 import gameConnection from '../api/gameConnection';
 
 var connection = null;
+
+export const createGame = () => {
+  return () => {
+    connection.command({
+		type: CREATE_GAME
+	});
+  };
+};
 
 export const joinGame = (gameIdentifier) => {
   return () => {

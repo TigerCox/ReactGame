@@ -1,17 +1,24 @@
 import React from 'react';
 import {render} from 'react-dom';
-import gameConnection from './api/gameConnection';
+import { Provider } from 'react-redux';
+import routes from './routes';
+import {Router, Route, browserHistory} from 'react-router';
 import configureStore from './store/configureStore';
-import {connect, joinGame} from './actions/playerActions';
+import {connect} from './actions/playerActions';
+
+import MainLayout from './components/layouts/MainLayout';
+import Lobby from './components/pages/Lobby';
 
 const store = configureStore();
-
-class App extends React.Component {
-  render () {
-    return <p> Hello React!!</p>;
-  }
-}
-
-render(<App/>, document.getElementById('app'));
 store.dispatch(connect());
-store.dispatch(joinGame(10));
+
+render(
+  <Provider store={store}>
+    <Router history={browserHistory} route={routes}>
+      <Route component={MainLayout}>
+        <Route path='/' component={Lobby} />
+        <Route path='*' component={Lobby} />
+      </Route>
+    </Router>
+  </Provider>, document.getElementById('app')
+);
