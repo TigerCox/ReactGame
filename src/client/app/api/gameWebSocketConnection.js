@@ -10,7 +10,7 @@ class gameWebSocketConnection extends jsonWebsocket {
 	onOpen() {}
 	onError(error) {}
 	onMessage(json) {
-		dispatch(json);
+		this.dispatch(json);
 	}
 	onClose() {}
 }

@@ -42,6 +42,7 @@ class jsonWebsocket {
 		this.connection.onmessage = (message) => {
 			try {
 				var json = JSON.parse(message.data);
+				console.log('Message:', message.data);
 				this.onMessage(json);
 			} catch (e) {
 				console.log('WebSocket Error: Invalid JSON:', message.data);

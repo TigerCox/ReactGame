@@ -34,6 +34,10 @@ class Board {
 		return Object.assign({}, this.players);
 	}
 	
+	getPlayerCount() {
+		return Object.keys(this.players).length;
+	}
+	
 	getBoard() {
 		var result = [];
 		for (var i = 0; i < this.board.length; i++) {

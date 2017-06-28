@@ -5,7 +5,9 @@ import {joinGame, updateLobby} from '../actions/BoardActions'
 class PlayerConnection extends Connection {
 	constructor(server, request) {
 		super(request);
+		this.guid = guid()
 		this.server = server;
+		this.boards = {};
 	}
 
 	getIdentifier() {
@@ -25,8 +27,6 @@ class PlayerConnection extends Connection {
 	}
 
   onOpen() {
-    this.guid = guid()
-	this.boards = {};
     console.log("Connection Open <" + this.guid + ">");
 	this.server.getLobby((lobbyInfo) => {
 		this.updateLobby(lobbyInfo);
@@ -47,7 +47,9 @@ class PlayerConnection extends Connection {
         break;
       case "JOIN_GAME":
         this.server.addPlayerToBoard(data.gameIdentifier, this.getIdentifier(), () => {
-            this.joinGame(boardIdentifier, board);
+            this.server.getBoard(data.gameIdentifier, this.getIdentifier(), (board) => {
+								this.joinGame(data.gameIdentifier, board);
+							});
         });
         break;
     }

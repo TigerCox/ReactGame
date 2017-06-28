@@ -25,7 +25,7 @@ class LobbyObject extends React.Component {
     return (
       <div>
 	    <button onClick={()=>{this.props['CreateGame']();}}>Create Game</button>
-		{GameList.map((game) => <Game onClick={this.props['JoinGame']} identifier={game.identifier} playerCount={game.Players} />)}
+		{this.props.lobby.map((game) => <Game onClick={this.props['JoinGame']} identifier={game.identifier} playerCount={game.players} />)}
       </div>
     );
   }
@@ -33,14 +33,14 @@ class LobbyObject extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    ['lobby']: state.lobby,
+    lobby: state.lobby,
   };
 };
 
 const mapDispatchToProps = (dispatch) => {
   return {
-	['CreateGame']: () => { dispatch(createGame()); },
-    ['JoinGame']: (gameIdentifier) => { dispatch(joinGame(gameIdentifier)); }
+	CreateGame: () => { dispatch(createGame()); },
+    JoinGame: (gameIdentifier) => { dispatch(joinGame(gameIdentifier)); }
   };
 };
 

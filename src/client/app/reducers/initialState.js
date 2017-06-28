@@ -3,5 +3,5 @@
 // of our entire store.
 export default {
   boards: {},
-  lobby: {}
+  lobby: []
 };

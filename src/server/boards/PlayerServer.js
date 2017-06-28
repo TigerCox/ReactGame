@@ -6,8 +6,47 @@ import Board from './Board';
 
 var lock = new ReadWriteLock();
 var LOCK_NAME = "PlayerServer";
+var LOBBY_LOCK_NAME = LOCK_NAME + ".Lobby";
 var BOARD_LOCK_NAME = LOCK_NAME + ".Boards";
 var PLAYER_LOCK_NAME = LOCK_NAME + ".Players";
+
+class Lobby {
+	constructor(rootLockName) {
+		this.lock = new ReadWriteLock();
+		this.rootLockName = rootLockName;
+		this.lobby = [];
+	}
+	
+	_getLobby() {
+		return this.lobby.slice();
+	}
+	
+	_setLobby(lobby) {
+		var oldLobby = this._getLobby();
+		this.lobby = lobby.slice();
+		return oldLobby;
+	}
+	
+	getLobby(callback) {
+		this.lock.readLock(this.rootLockName, (release) => {
+			var lobby = this._getLobby();
+			release();
+			if (callback) {
+				callback(lobby);
+			}
+		});
+	}
+	
+	setLobby(lobby, callback) {
+		this.lock.writeLock(this.rootLockName, (release) => {
+			var oldLobby = this._setLobby(lobby);
+			release();
+			if (callback) {
+				callback(oldLobby);
+			}
+		});
+	}
+}
 
 class SharedValueMap {
   constructor(rootLockName) {
@@ -126,6 +165,7 @@ class PlayerServer extends SocketServer {
     super();
     this.players = new SharedValueMap(PLAYER_LOCK_NAME);
     this.boards = new SharedValueMap(BOARD_LOCK_NAME);
+	this.lobby = new Lobby(LOBBY_LOCK_NAME);
   }
 
   createConnection(request) {
@@ -217,9 +257,15 @@ class PlayerServer extends SocketServer {
 			  for (var boardIdentifier in boards) {
 				this.boards.editValue(boardIdentifier, (board, boardRelease) => {
 					if (board != null) {
-						board.removePlayer(player);
+						board.removePlayer(playerIdentifier);
 					}
-					boardRelease();
+					if (!board.getPlayerCount()) {
+						boardRelease();
+						this.removeBoard(boardIdentifier);
+					} else {
+						boardRelease();
+					}
+					this.updateLobby();
 				});
 			  }
 			  playerRelease();
@@ -236,12 +282,13 @@ class PlayerServer extends SocketServer {
 			  for (var playerIdentifier in players) {
 				this.players.editValue(playerIdentifier, (player, playerRelease) => {
 					if (player != null) {
-						player.removeBoard(board);
+						player.removeBoard(board.getIdentifier());
 					}
 					playerRelease();
 				});
 			  }
 			  boardRelease();
+			  this.updateLobby();
 		  }
 	  });
   }
@@ -257,29 +304,37 @@ class PlayerServer extends SocketServer {
 	  });
   }
   
-  getLobby(callback) {
+  _getLobby(callback) {
 	  this.boards.getValues((boards, boardRelease) => {
 		 var result = [];
 		 for(var i = 0; i < boards.length; i++) {
 			var board = boards[i];
-			result.push({identifier: board.getIdentifier(), players: 0});
+			result.push({identifier: board.getIdentifier(), players: board.getPlayerCount()});
 		 }
 		 boardRelease();
 		 callback(result);
 	  });
   }
   
+  getLobby(callback) {
+	  this.lobby.getLobby((lobby) => {
+		  callback(lobby);
+	  });
+  }
+  
   updateLobby(callback) {
-	  this.getLobby((lobbyInfo) => {
-		this.players.getKeys((playerKeys, parentRelease) => {
-			for (var i = 0; i < playerKeys.length; i++) {
-				this.players.editValue(playerKeys[i], (player, playerRelease) => {
-					player.updateLobby(lobbyInfo);
-					playerRelease();
-				});
-			}
-			parentRelease();
-		});
+	  this._getLobby((lobbyInfo) => {
+		  this.lobby.setLobby(lobbyInfo, () => {
+			this.players.getKeys((playerKeys, parentRelease) => {
+				for (var i = 0; i < playerKeys.length; i++) {
+					this.players.editValue(playerKeys[i], (player, playerRelease) => {
+						player.updateLobby(lobbyInfo);
+						playerRelease();
+					});
+				}
+				parentRelease();
+			});
+		  });
 	  });
   }
 }
