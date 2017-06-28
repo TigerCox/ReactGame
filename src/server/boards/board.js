@@ -27,7 +27,19 @@ class Board {
 	}
 
 	removePlayer(playerIdentifier) {
-		delete this.players[playerIdentifier];
+		return delete this.players[playerIdentifier];
+	}
+	
+	getPlayers() {
+		return Object.assign({}, this.players);
+	}
+	
+	getBoard() {
+		var result = [];
+		for (var i = 0; i < this.board.length; i++) {
+			result.push(this.board[i].slice());
+		}
+		return result;
 	}
 }
 

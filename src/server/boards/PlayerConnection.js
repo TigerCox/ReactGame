@@ -1,11 +1,11 @@
 import guid from '../guid';
 import Connection from '../sockets/Connection'
-import {joinGame} from '../actions/BoardActions'
+import {joinGame, updateLobby} from '../actions/BoardActions'
 
 class PlayerConnection extends Connection {
 	constructor(server, request) {
 		super(request);
-    this.server = server;
+		this.server = server;
 	}
 
 	getIdentifier() {
@@ -16,8 +16,8 @@ class PlayerConnection extends Connection {
 		this.boards[board.getIdentifier()] = board;
 	}
 
-	removeBoard(board) {
-		delete this.boards[board.getIdentifier()];
+	removeBoard(boardIdentifier) {
+		return delete this.boards[boardIdentifier];
 	}
 
 	getBoards() {
@@ -26,28 +26,39 @@ class PlayerConnection extends Connection {
 
   onOpen() {
     this.guid = guid()
-		this.boards = {};
+	this.boards = {};
     console.log("Connection Open <" + this.guid + ">");
+	this.server.getLobby((lobbyInfo) => {
+		this.updateLobby(lobbyInfo);
+	});
   }
 
   onMessage(data) {
     console.log("Message <" + this.guid + "> " + JSON.stringify(data));
     switch (data.type) {
       case "CREATE_GAME":
-          this.server.addBoard(function(boardIdentifier) {
-            this.server.addPlayerToBoard(boardIdentifier, this.getIdentifier(), function(playerIdentifier) {
-							this.server.getBoard(boardIdentifier, this.getIdentifier(), function(board) {
-								this.send(joinGame(boardIdentifier, board));
-							}.bind(this));
-          }.bind(this));
-        }.bind(this));
+          this.server.addBoard((boardIdentifier) => {
+            this.server.addPlayerToBoard(boardIdentifier, this.getIdentifier(), (playerIdentifier) => {
+							this.server.getBoard(boardIdentifier, this.getIdentifier(), (board) => {
+								this.joinGame(boardIdentifier, board);
+							});
+          });
+        });
         break;
       case "JOIN_GAME":
-        this.server.addPlayerToBoard(data.gameIdentifier, this.getIdentifier(), function() {
-            this.send(joinGame(boardIdentifier, board));
-        }.bind(this));
+        this.server.addPlayerToBoard(data.gameIdentifier, this.getIdentifier(), () => {
+            this.joinGame(boardIdentifier, board);
+        });
         break;
     }
+  }
+  
+  joinGame(boardIdentifier, boardInfo) {
+	  this.send(joinGame(boardIdentifier, boardInfo));
+  }
+  
+  updateLobby(lobbyInfo) {
+	  this.send(updateLobby(lobbyInfo));
   }
 
   onError(error) {
@@ -56,10 +67,7 @@ class PlayerConnection extends Connection {
 
   onClose() {
     console.log("Connection Closed <" + this.guid + ">");
-    for (var boardIdentifier in this.boards) {
-      this.server.removePlayerFromBoard(boardIdentifier, this.getIdentifier(), function() {});
-    }
-    this.boards = {};
+    this.server.removePlayer(this.getIdentifier());
   }
 }
 

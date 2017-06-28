@@ -17,7 +17,7 @@ class Connection {
       this.onClose();
     }.bind(this));
 
-    this.onOpen();
+    setTimeout(() => {this.onOpen();}, 0);
   }
 
   send(data) {
